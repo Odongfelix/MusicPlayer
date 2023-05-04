@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,10 +9,136 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="Music"
+        android:textColor="@color/purple_700"
+        android:textSize="20sp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <ImageView
+        android:id="@+id/search"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="10dp"
+        android:background="@drawable/clickable_background"
+        android:padding="5dp"
+        android:src="@drawable/search"
+        app:tint="@color/purple_700" />
+
+    <ImageView
+        android:id="@+id/back"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:visibility="gone"
+        android:background="@drawable/clickable_background"
+        android:src="@drawable/back"
+        app:tint="@color/purple_700" />
+    <EditText
+        android:visibility="gone"
+        android:id="@+id/search_edit_text"
+        android:layout_toEndOf="@id/back"
+        android:layout_toStartOf="@id/search"
+        android:background="@drawable/search_rect"
+        android:layout_width="match_parent"
+        android:padding="5dp"
+        android:textAlignment="center"
+        android:layout_marginTop="10dp"
+        android:layout_height="wrap_content"
+        android:hint="search song or artist"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/music_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/player"
+        android:layout_below="@id/search" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="searching for songs"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:textColor="@color/black"
+        android:id="@+id/searching_text"
+        android:layout_above="@id/loading_songs"/>
+
+    <com.example.musicplayer.EvelynProgressBar
+        android:id="@+id/loading_songs"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="50dp"
+         />
+
+    <RelativeLayout
+        android:id="@+id/player"
+        android:visibility="gone"
+        android:background="@color/teal_200"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="my mind is on fire "
+            android:textColor="@color/purple_500"
+            android:id="@+id/song_name"
+            android:textSize="17sp"
+            android:layout_centerHorizontal="true"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="justin bieber "
+            android:textColor="@color/purple_200"
+            android:id="@+id/artist_name"
+            android:layout_below="@id/song_name"
+            android:layout_centerHorizontal="true"
+            />
+
+        <ImageView
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/play"
+            android:id="@+id/play"
+            android:layout_below="@id/artist_name"
+            android:layout_marginBottom="10dp"
+            app:tint="@color/purple_700" />
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/next"
+            android:id="@+id/previous"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="50dp"
+            android:layout_toEndOf="@id/play"
+            app:tint="@color/purple_700" />
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/next"
+            android:src="@drawable/previous"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="50dp"
+            android:layout_toStartOf="@id/play"
+            app:tint="@color/purple_700" />
+        <com.example.musicplayer.EvelynProgressBar
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_below="@id/play"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="100dp"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/playing"/>
+    </RelativeLayout>
+
+</RelativeLayout>
