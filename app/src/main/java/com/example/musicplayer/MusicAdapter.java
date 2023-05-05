@@ -55,7 +55,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicHolder> {
                 continue;
             if (s.getName().contains(searchString) || s.getArtist().contains(searchString)) {
                 songs.add(s);
-                notifyItemRangeChanged(0,songs.size());
+                notifyDataSetChanged();
             }
         }
     }

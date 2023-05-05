@@ -9,6 +9,9 @@ public class Song {
     private String name, path, artist = "unknown artist";
     private boolean isPlaying;
 
+    public Song() {
+    }
+
     public Song(String name) {
         this.name = name;//todo this is only for debug purposes
     }
@@ -25,7 +28,7 @@ public class Song {
             m.setDataSource(path);
             artist = m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             artist = artist == null ? "un known artist" : artist;
-        }catch (Exception e){
+        } catch (Exception e) {
             artist = "unknown artist";
         }
 

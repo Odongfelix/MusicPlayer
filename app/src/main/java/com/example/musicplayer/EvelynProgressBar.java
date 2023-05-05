@@ -33,6 +33,7 @@ public class EvelynProgressBar extends View {
     private int width;
 
     public void setProgress(float progress) {
+        determinate = true;
         this.progress = progress;
         invalidate();
     }

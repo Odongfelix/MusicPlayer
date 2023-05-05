@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -44,8 +45,10 @@ public class MainActivity extends AppCompatActivity {
     private EditText searchInput;
     private InputMethodManager iManager;
 
-    private EvelynProgressBar loadingsongs,playingSongs;
-private TextView searching;
+    private EvelynProgressBar loadingsongs, playingSongs;
+    private TextView searching;
+    private boolean initial = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,12 +96,12 @@ private TextView searching;
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    adapter.filter(s.toString());
+
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {
-
+                    adapter.filter(searchInput.getText().toString());
                 }
             });
             play.setOnClickListener(p -> {
@@ -107,16 +110,10 @@ private TextView searching;
                 play(songs.get(currentSongIndex));
             });
             next.setOnClickListener(n -> {
-                int nextIndex = currentSongIndex - 1;
-                if (nextIndex < 0 || nextIndex >= songs.size())
-                    return;
-                play(songs.get(nextIndex));
+                playNext();
             });
             previous.setOnClickListener(p -> {
-                int previousIndex = currentSongIndex + 1;
-                if (previousIndex < 0 || previousIndex >= songs.size())
-                    return;
-                play(songs.get(previousIndex));
+                playPrevious();
             });
         }
         //setting up recycler view
@@ -154,6 +151,20 @@ private TextView searching;
         loadingsongs.setIndeterminate();
     }
 
+    private void playPrevious() {
+        int previousIndex = currentSongIndex + 1;
+        if (previousIndex < 0 || previousIndex >= songs.size())
+            return;
+        play(songs.get(previousIndex));
+    }
+
+    private void playNext() {
+        int nextIndex = currentSongIndex - 1;
+        if (nextIndex < 0 || nextIndex >= songs.size())
+            return;
+        play(songs.get(nextIndex));
+    }
+
     private void loadSong() {
         //dealing with file read permission
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -162,13 +173,15 @@ private TextView searching;
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
             return;
         }
+        loadingsongs.setVisibility(View.VISIBLE);
+        searching.setVisibility(View.VISIBLE);
         //searching for songs on a different thread since its a blocking process
         new Thread(() -> {
             File externalStorage = Environment.getExternalStorageDirectory();
             list(externalStorage.listFiles());
             //returning to UI thread after
-            new Handler(Looper.getMainLooper()).post(()->{
-                adapter.notifyItemRangeChanged(0,songs.size());
+            new Handler(Looper.getMainLooper()).post(() -> {
+                adapter.notifyItemRangeChanged(0, songs.size());
                 loadingsongs.stop();
                 loadingsongs.setVisibility(View.GONE);
                 searching.setVisibility(View.GONE);
@@ -180,7 +193,7 @@ private TextView searching;
         if (files == null)
             return;
         for (File f : files) {
-            if (f.getName().endsWith(".mp3") || f.getName().endsWith(".opus") || f.getName().endsWith(".wav") || f.getName().endsWith(".acc")) {
+            if (f.getName().endsWith(".mp3")) {
                 Song song = new Song(f);
                 songs.add(song);
             }
@@ -189,61 +202,98 @@ private TextView searching;
         }
     }
 
-    private void play(Song song) {
-        //normal media player stuff
-        {
-            try {
-                mediaPlayer.setDataSource(song.getPath());
-                mediaPlayer.prepare();
-                mediaPlayer.setOnPreparedListener(mp -> {
-                    mp.start();
-                    showProgress();
-                    //changing the player controls
-                    {
-                        if (mediaPlayer.isPlaying()) {
-                            player.setVisibility(View.VISIBLE);
-                            play.setImageResource(R.drawable.pause);
-                            songName.setText(song.getName());
-                            artistName.setText(song.getArtist());
-                            //un play previous song
-                            for (Song s : songs) {
-                                if (s.isPlaying()) {
-                                    s.setPlaying(false);
-                                    adapter.notifyItemChanged(songs.indexOf(s));
-                                }
-                            }
-                            song.setPlaying(true);
-                            currentSongIndex = songs.indexOf(song);
-                            adapter.notifyItemChanged(currentSongIndex);
-                            //scroll to the current song if its off screen
-                            if (currentSongIndex > lManager.findLastCompletelyVisibleItemPosition())
-                                musicRecyclerView.smoothScrollToPosition(currentSongIndex);
-                        } else {
-                            play.setImageResource(R.drawable.play);
-                            songName.setText("");
-                            artistName.setText("");
-                        }
-                    }
+    private void playInitial(Song song) {
+        try {
+            mediaPlayer.setDataSource(song.getPath());
+            mediaPlayer.prepare();
+            mediaPlayer.setOnPreparedListener(mp -> {
+                mp.start();
+                paused = false;
+                mp.setOnCompletionListener(mp1 -> {
+                    playPrevious();
                 });
-            } catch (Exception e) {
-                Toast.makeText(this, "error !!"+e, Toast.LENGTH_SHORT).show();
+                initial = false;
+                showProgress();
+                //changing the player controls
+                {
+                    if (mediaPlayer.isPlaying()) {
+                        player.setVisibility(View.VISIBLE);
+                        play.setImageResource(R.drawable.pause);
+                        songName.setText(song.getName());
+                        artistName.setText(song.getArtist());
+                        //un play previous song
+                        for (Song s : songs) {
+                            if (s.isPlaying()) {
+                                s.setPlaying(false);
+                                adapter.notifyItemChanged(songs.indexOf(s));
+                            }
+                        }
+                        song.setPlaying(true);
+                        currentSongIndex = songs.indexOf(song);
+                        adapter.notifyItemChanged(currentSongIndex);
+                        //scroll to the current song if its off screen
+                        if (currentSongIndex > lManager.findLastCompletelyVisibleItemPosition())
+                            musicRecyclerView.smoothScrollToPosition(currentSongIndex);
+                    } else {
+                        play.setImageResource(R.drawable.play);
+                        songName.setText("");
+                        artistName.setText("");
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Toast.makeText(this, "error !!" + e, Toast.LENGTH_SHORT).show();
+        }
+    }
+private boolean paused = false;
+    private void play(Song song) {
+        if (initial) {
+            playInitial(song);
+            return;
+        }
+        //pause if the currrent song if its playing
+        if (mediaPlayer.isPlaying() && currentSongIndex == songs.indexOf(song)) {
+            mediaPlayer.pause();
+            paused = true;
+            play.setImageResource(R.drawable.play);
+            return;
+        }
+        //unpause if was paused
+        if (!mediaPlayer.isPlaying() && paused) {
+            try {
+                mediaPlayer.start();
+                paused = false;
+                showProgress();
+                play.setImageResource(R.drawable.pause);
+            } catch (Exception ignored) {
             }
         }
+        mediaPlayer.stop();
+        mediaPlayer.reset();
+        playInitial(song);
     }
 
     private void showProgress() {
         //todo implement this
-        if(!mediaPlayer.isPlaying())
+        if (!mediaPlayer.isPlaying())
             return;
-        float progress = (float)mediaPlayer.getCurrentPosition()/mediaPlayer.getDuration();
+        float progress = (float) mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration();
+        Log.d("prog", "" + progress);
         playingSongs.setProgress(progress);
-        new Handler().postDelayed(this::showProgress,1000);
+        new Handler().postDelayed(this::showProgress, 1000);
+    }
+
+    @Override
+    protected void onDestroy() {
+        mediaPlayer.stop();
+        mediaPlayer.release();
+        super.onDestroy();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode==0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        if (requestCode == 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             loadSong();
     }
 }
